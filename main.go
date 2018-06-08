@@ -1,11 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -39,31 +39,28 @@ func run() error {
 		return fmt.Errorf("could not draw title: %v", err)
 	}
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 
-	if err := drawBackGround(r); err != nil {
-		return fmt.Errorf("Could not draw background: %v", err)
-	}
-
-	time.Sleep(5 * time.Second)
-
-	return nil
-}
-
-func drawBackGround(r *sdl.Renderer) error {
-	r.Clear()
-	t, err := img.LoadTexture(r, "res/imgs/background.png")
-
+	s, err := newScene(r)
 	if err != nil {
-		return fmt.Errorf("Could not load background: %v", err)
+		return fmt.Errorf("Could not create scene: %v", err)
+	}
+	defer s.destroy()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	select {
+	case <-s.run(ctx, r):
+		return fmt.Errorf("Could not paint scene: %v", err)
+	case <-time.After(5 * time.Second):
+		return nil
 	}
 
-	if err := r.Copy(t, nil, nil); err != nil {
-		return fmt.Errorf("Could not copy background: %v", err)
-
+	if err := s.paint(r); err != nil {
+		return fmt.Errorf("Could not paint scene: %v", err)
 	}
 
-	r.Present()
+	time.Sleep(5 * time.Second)
 
 	return nil
 }
