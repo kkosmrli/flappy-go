@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -34,11 +35,37 @@ func run() error {
 
 	defer w.Destroy()
 
-	_ = r
+	if err := drawTitle(r); err != nil {
+		return fmt.Errorf("could not draw title: %v", err)
+	}
 
 	time.Sleep(5 * time.Second)
 
-	return drawTitle(r)
+	if err := drawBackGround(r); err != nil {
+		return fmt.Errorf("Could not draw background: %v", err)
+	}
+
+	time.Sleep(5 * time.Second)
+
+	return nil
+}
+
+func drawBackGround(r *sdl.Renderer) error {
+	r.Clear()
+	t, err := img.LoadTexture(r, "res/imgs/background.png")
+
+	if err != nil {
+		return fmt.Errorf("Could not load background: %v", err)
+	}
+
+	if err := r.Copy(t, nil, nil); err != nil {
+		return fmt.Errorf("Could not copy background: %v", err)
+
+	}
+
+	r.Present()
+
+	return nil
 }
 
 func drawTitle(r *sdl.Renderer) error {
@@ -49,7 +76,7 @@ func drawTitle(r *sdl.Renderer) error {
 	}
 	defer f.Close()
 
-	s, err := f.RenderUTF8Solid("Flappy Gopher", sdl.Color{R:255, G: 100, B:0, A:255 })
+	s, err := f.RenderUTF8Solid("Flappy Gopher", sdl.Color{R: 255, G: 100, B: 0, A: 255})
 
 	if err != nil {
 		return fmt.Errorf("could not render title: %v", err)
